@@ -5,6 +5,7 @@ FROM pytorch/pytorch:1.10.0-cuda11.3-cudnn8-devel
 ENV DEBIAN_FRONTEND noninteractive
 
 # https://github.com/facebookresearch/detectron2/issues/4204
+# https://github.com/NVIDIA/nvidia-docker/issues/1631
 RUN rm /etc/apt/sources.list.d/cuda.list
 RUN rm /etc/apt/sources.list.d/nvidia-ml.list
 RUN apt-key del 7fa2af80
@@ -39,7 +40,7 @@ RUN pip install --user cmake   # cmake from apt-get is too old
 
 RUN pip install --user 'git+https://github.com/facebookresearch/fvcore'
 # install detectron2
-RUN git clone https://github.com/facebookresearch/detectron2 detectron2_repo
+RUN git clone https://github.com/facebookresearch/detectron2 detectron2_repo[all,dev]
 # set FORCE_CUDA because during `docker build` cuda is not accessible
 ENV FORCE_CUDA="1"
 # This will by default build detectron2 for all common cuda architectures and take a lot more time,
