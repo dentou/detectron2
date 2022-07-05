@@ -1,8 +1,9 @@
 image: docker:20.10.16
-services:
-  - docker:20.10.16-dind
+# services:
+#   - docker:20.10.16-dind
 
 default:
+  # image: alpine
   tags:
     # - asprunner
     # - birlinghoven
@@ -18,7 +19,7 @@ variables:
   # # Use TLS https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#tls-enabled
   # DOCKER_HOST: tcp://docker:2376
   # DOCKER_TLS_CERTDIR: "/certs"
-  DOCKER_TLS_CERTDIR: ""
+  # DOCKER_TLS_CERTDIR: ""
   CONTAINER_TEST_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
   CONTAINER_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:latest
 
@@ -26,38 +27,41 @@ before_script:
   - docker info
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
-build:
-  stage: build
-  script:
-    - docker build --pull -t $CONTAINER_TEST_IMAGE docker/
-    - docker push $CONTAINER_TEST_IMAGE
-  only:
-    - gitlab
-
-
 # build:
 #   stage: build
-#   variables:
-#     GIT_STRATEGY: clone
-#   image:
-#     name: gcr.io/kaniko-project/executor:debug
-#     entrypoint: [""]
 #   script:
-#     - mkdir -p /kaniko/.docker
-#     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-#     - /kaniko/executor
-#       --context=$CI_PROJECT_DIR
-#       --dockerfile=$CI_PROJECT_DIR/docker/Dockerfile
-#       --destination=$CI_REGISTRY_IMAGE/tt_image-$CI_COMMIT_REF_NAME
+#     - docker build --pull -t $CONTAINER_TEST_IMAGE docker/
+#     - docker push $CONTAINER_TEST_IMAGE
+#   only:
+#     - gitlab
 
 
-test:
-  stage: test
+build:
+  stage: build
+  variables:
+    GIT_STRATEGY: clone
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
   script:
-    - docker pull $CONTAINER_TEST_IMAGE
-    - docker run $CONTAINER_TEST_IMAGE 'python -m unittest discover -v -s ./tests' 
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor
+      --context=$CI_PROJECT_DIR
+      --dockerfile=$CI_PROJECT_DIR/docker/Dockerfile
+      --destination=$CONTAINER_TEST_IMAGE
   only:
     - gitlab
+
+
+
+# test:
+#   stage: test
+#   script:
+#     - docker pull $CONTAINER_TEST_IMAGE
+#     - docker run $CONTAINER_TEST_IMAGE 'python -m unittest discover -v -s ./tests' 
+#   only:
+#     - gitlab
 
 # test1:
 #   stage: test
@@ -71,7 +75,7 @@ test:
 #     - docker pull $CONTAINER_TEST_IMAGE
 #     - docker run $CONTAINER_TEST_IMAGE /script/to/run/another/test
 
-release-image:
+release:
   stage: release
   script:
     - docker pull $CONTAINER_TEST_IMAGE
