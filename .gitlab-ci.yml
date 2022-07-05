@@ -2,6 +2,12 @@ image: docker:19.03.12
 services:
   - docker:19.03.12-dind
 
+default:
+  tags:
+    - asprunner
+    - birlinghoven
+    - intranet
+
 stages:
   - build
   - test
@@ -26,7 +32,7 @@ build:
   only:
     - gitlab
 
-run-unittest:
+test:
   stage: test
   script:
     - docker pull $CONTAINER_TEST_IMAGE
